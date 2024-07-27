@@ -1,0 +1,48 @@
+﻿<Window x:Class="CSModLauncher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CSModLauncher"
+        mc:Ignorable="d"
+        ResizeMode="CanMinimize"
+        WindowStyle="ThreeDBorderWindow"
+        Title="CSModLauncher"
+        SizeToContent="WidthAndHeight"
+        KeyDown="Window_KeyDown">
+    <Grid Height="480" Width="640">
+        <DockPanel>
+            <Menu DockPanel.Dock="Top">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Create New .cmf..." Click="CreateNewCmf_Click"/>
+                    <Separator/>
+                    <MenuItem Header="_Exit"/>
+                </MenuItem>
+            </Menu>
+            <Grid DockPanel.Dock="Bottom">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="0.65*"/>
+                    <ColumnDefinition Width="1.3*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <ListBox Name="Modlist" Margin="10" SelectionChanged="Modlist_SelectionChanged"/>
+                </Grid>
+                <Grid Grid.Column="1">
+                    <Grid Margin="10,0,10,355" Height="97" VerticalAlignment="Bottom">
+                        <TextBlock x:Name="ModTitle" Text="CSModLauncher" FontSize="25" Margin="0,0,0,45"/>
+                        <TextBlock x:Name="VersionBox" FontSize="16" Text="" Margin="213,55,0,0"/>
+                        <TextBlock x:Name="AuthorBox" FontSize="16" Text="" Margin="0,55,213,0"/>
+                    </Grid>
+                    <Grid Margin="10,0,10,310" Height="40" VerticalAlignment="Bottom">
+                        <Button x:Name="PlayButton" IsEnabled="False" Content="Play!" FontSize="20" Margin="0,0,301,0" Click="PlayButton_Click" Height="40" VerticalAlignment="Top"/>
+                        <Button x:Name="ConfigButton" IsEnabled="False" Content="Configure" FontSize="20" Margin="107,0,195,0" Click="ConfigButton_Click" Height="40" VerticalAlignment="Top"/>
+                        <Button x:Name="UpdateButton" IsEnabled="False" FontSize="20" Content="Check for updates..." Margin="213,0,0,0" Click="UpdateButton_Click" Height="40" VerticalAlignment="Top"/>
+                    </Grid>
+                    <Border Margin="10,157,10,10" Background="#FFE6E6E6" BorderBrush="#FFABADB3" BorderThickness="1">
+                        <TextBlock x:Name="ModInfo" TextWrapping="Wrap" Text="Please select a mod" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Foreground="Black" Margin="2,2,2,2"/>
+                    </Border>
+                </Grid>
+            </Grid>
+        </DockPanel>
+    </Grid>
+</Window>

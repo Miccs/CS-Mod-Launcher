@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--Name is the name of the mod, author is the creator(or creators) of the mod-->
+<mod name="My mod" author="Me">
+
+	<version>
+		<!--The current version of the mod-->
+		<versionno>
+			1.00
+		</versionno>
+		<!--Any info on the latest update-->
+		<updatelog>
+			I made a mod!
+		</updatelog>
+	</version>
+	
+	<modinfo>
+		<!--Info about the mod-->
+		<description>
+			A mod of cave story where you do stuff.
+		</description>
+		<!-- The url where the mod can be downloaded. IMPORTANT: MUST LINK TO A ZIP FILE -->
+		<link type="download"> 
+			http://www.example.com/example.zip
+		</link>
+		<!-- the url where the current online version can be found, not mandatory. But link to a xml or cmf file if you do. -->
+		<link type="version">
+			http://www.example.com/example.cmf
+		</link>
+	</modinfo>
+	
+	<!-- You can put the files you want downloaded and/or updated here. The cmf file and the data folder do NOT need to be added in this list -->
+	<files> 
+		<!-- doukutsu indicates the exe that is needed to start the game up. This file will always be updated. -->
+		<file type="doukutsu"> 
+			Doukutsu.exe
+		</file>
+		
+		<!-- update will indicate that this file will be updated every time a update happens -->
+		<file type="update">
+			Readme.txt
+		</file>
+		
+		<!-- add will indicate that if this file is missing, it must be added, but it will not be updated. -->
+		<file type="addfile">
+			DoConfig.exe
+		</file>	
+		<file type="addfile">
+			Config.dat
+		</file>	
+	</files>
+	
+</mod>

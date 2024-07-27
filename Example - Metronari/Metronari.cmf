@@ -1,0 +1,20 @@
+{
+    "Name" : "Metronari",
+    "Author" : "MintiFreshFox",
+    "Description" : "A mod that entered modcon 2016. Using a purely black and white simplistic style and room-to-room navigation. Using metroidvanias as inspiration.",
+    "Version" : {
+        "VersionNum" : 1.05,
+        "UpdateLog" : ""
+    },
+    "Links" : {
+		"DoukutsuClubID" : "64f8ef5171eef6002831e020",
+        "DownloadLink" : "",
+        "VersionLink" : ""
+    },
+    "Files" : {
+		"ConfigFile" : "DoConfig.exe",
+        "DoukutsuFile" : "Metronari.exe",
+        "FilesToUpdate" : [ "Readme.txt" ],
+        "FilesToAdd" : [ "Doconfig.exe", "Config.dat"]
+    }
+}

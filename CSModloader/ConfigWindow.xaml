@@ -1,0 +1,154 @@
+﻿<Window x:Class="CSModLauncher.ConfigWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CSModLauncher"
+        mc:Ignorable="d"
+        Title="DoConfig+" Width="688" Height="560"
+        FontSize="12">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="1*" />
+        </Grid.ColumnDefinitions>
+        <Grid Margin="10" Grid.Column="0">
+            <CheckBox Content="Enable Gamepad" Name="UsingGamepad" Margin="10,25,0,0" Height="15" VerticalAlignment="Top" HorizontalAlignment="Left" Width="300" Checked="UsingGamepad_Checked" Unchecked="UsingGamepad_Unchecked"/>
+            <Grid Margin="10,45,10,253">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2.1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+                    <Label Content="Map" HorizontalAlignment="Left" Margin="0,174,0,0" VerticalAlignment="Top" Width="62"/>
+                    <Label Content="Item" HorizontalAlignment="Left" Margin="0,144,0,0" VerticalAlignment="Top" Width="62"/>
+                    <Label Content="Weapon-" HorizontalAlignment="Left" Margin="0,114,0,0" VerticalAlignment="Top" Width="62"/>
+                    <Label Content="Weapon+" HorizontalAlignment="Left" Margin="0,84,0,0" VerticalAlignment="Top" Width="62"/>
+                    <Label Content="Attack" HorizontalAlignment="Left" Margin="0,54,0,0" VerticalAlignment="Top" Width="62"/>
+                    <Label Content="Jump" HorizontalAlignment="Left" Margin="0,24,0,0" VerticalAlignment="Top" Width="62"/>
+                </Grid>
+                <Grid Grid.Column="1" Name="RadioGrid1">
+                    <Label Content="1" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button1" Name="Jump1" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button1" Name="Attack1" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button1" Name="WepPlus1" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button1" Name="WepMin1" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button1" Name="Item1" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button1" Name="Map1" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="2" Name="RadioGrid2">
+                    <Label Content="2" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button2" Name="Jump2" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button2" Name="Attack2" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button2" Name="WepPlus2" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button2" Name="WepMin2" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button2" Name="Item2" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button2" Name="Map2" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="3" Name="RadioGrid3">
+                    <Label Content="3" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button3" Name="Jump3" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button3" Name="Attack3" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button3" Name="WepPlus3" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button3" Name="WepMin3" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button3" Name="Item3" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button3" Name="Map3" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="4" Name="RadioGrid4">
+                    <Label Content="4" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button4" Name="Jump4" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button4" Name="Attack4" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button4" Name="WepPlus4" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button4" Name="WepMin4" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button4" Name="Item4" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button4" Name="Map4" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="5" Name="RadioGrid5">
+                    <Label Content="5" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button5" Name="Jump5" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button5" Name="Attack5" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button5" Name="WepPlus5" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button5" Name="WepMin5" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button5" Name="Item5" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button5" Name="Map5" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="6" Name="RadioGrid6">
+                    <Label Content="6" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button6" Name="Jump6" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button6" Name="Attack6" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button6" Name="WepPlus6" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button6" Name="WepMin6" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button6" Name="Item6" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button6" Name="Map6" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="7" Name="RadioGrid7">
+                    <Label Content="7" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button7" Name="Jump7" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button7" Name="Attack7" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button7" Name="WepPlus7" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button7" Name="WepMin7" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button7" Name="Item7" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button7" Name="Map7" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+                <Grid Grid.Column="8" Name="RadioGrid8">
+                    <Label Content="8" HorizontalAlignment="Left" Margin="5.5,0,0,0" VerticalAlignment="Top" Height="25" Width="22"/>
+                    <RadioButton GroupName="Button8" Name="Jump8" HorizontalAlignment="Left" Margin="7.5,30,0,0" VerticalAlignment="Top" Height="15" Width="15"/>
+                    <RadioButton GroupName="Button8" Name="Attack8" HorizontalAlignment="Left" Margin="8,60,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button8" Name="WepPlus8" HorizontalAlignment="Left" Margin="8,90,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button8" Name="WepMin8" HorizontalAlignment="Left" Margin="8,120,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button8" Name="Item8" HorizontalAlignment="Left" Margin="8,150,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                    <RadioButton GroupName="Button8" Name="Map8" HorizontalAlignment="Left" Margin="8,180,0,0" VerticalAlignment="Top" Height="15" Width="14"/>
+                </Grid>
+            </Grid>
+
+            <Border BorderBrush="Black" BorderThickness="1" Margin="10,261,10,10" OpacityMask="#FF646464"/>
+        </Grid>
+        <GridSplitter Width="1" Margin="0,112,0,0"/>
+        <Grid Margin="10" Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="0.6*" />
+                <RowDefinition Height="0.4*" />
+                <RowDefinition Height="1.1*" />
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="0">
+
+            </Grid>
+            <Grid Grid.Row="1">
+
+            </Grid>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <Grid Grid.Column="0">
+
+                </Grid>
+
+                <GridSplitter Width="1" />
+                <Grid Grid.Column="1">
+                    <Button Content="Cancel" HorizontalAlignment="Left" Margin="10,227,0,0" VerticalAlignment="Top" Width="140" Height="30" Click="CancelButton_Click"/>
+                    <Button Content="OK" HorizontalAlignment="Left" Margin="10,187,0,0" VerticalAlignment="Top" Width="140" Height="30" Click="OkButton_Click"/>
+                    <Button Content="Restore Defaults" HorizontalAlignment="Left" Margin="10,147,0,0" VerticalAlignment="Top" Width="140" Height="30" Click="DefaultButton_Click"/>
+                    <ComboBox x:Name="WindowSetting" HorizontalAlignment="Left" Margin="10,107,0,0" VerticalAlignment="Top" Width="140">
+                        <ComboBoxItem IsSelected="True">Full Screen</ComboBoxItem>
+                        <ComboBoxItem>320×240 Windowed</ComboBoxItem>
+                        <ComboBoxItem>640×480 Windowed</ComboBoxItem>
+                        <ComboBoxItem>Full 24-Bit</ComboBoxItem>
+                        <ComboBoxItem>Full 32-Bit</ComboBoxItem>
+                    </ComboBox>
+                    <Button x:Name="FontSetting" Click="FontSetting_Click" HorizontalAlignment="Left" Height="21" Margin="10,62,0,0" Content="Select Font..." VerticalAlignment="Top" Width="140"/>
+                    <TextBox x:Name="FontSample" HorizontalAlignment="Left" VerticalContentAlignment="Center" Height="38" Margin="10,12,0,0" TextWrapping="Wrap" FontFamily="Courier New" FontSize="18" Text="123 ABC" VerticalAlignment="Top" Width="140"/>
+
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

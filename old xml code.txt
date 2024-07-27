@@ -1,0 +1,77 @@
+try
+{
+XmlReader reader = XmlReader.Create(filepath);
+                filestoupdate.Clear();
+                filestoadd.Clear(); 
+                while (reader.Read())
+                {
+                    if (reader.IsStartElement())
+                    {
+                        if (reader.Name == "mod")
+                        {
+                            modname = reader["name"];
+                            modauthor = reader["author"];
+                        }
+
+                        if (reader.Name == "versionno")
+                        {
+                            if (reader.Read())
+                            {
+                                version = reader.Value.Trim();
+                            }
+                        }
+                        else if (reader.Name == "description")
+                        {
+                            if (reader.Read())
+                            {
+                                moddesc = reader.Value.Trim();
+                            }
+                        }
+                        else if (reader.Name == "link" && reader["type"] == "download")
+                        {
+                            if (reader.Read())
+                            {
+                                downloadlink = reader.Value.Trim();
+                            }
+                        }
+                        else if (reader.Name == "link" && reader["type"] == "version")
+                        {
+                            if (reader.Read())
+                            {
+                                versionlink = reader.Value.Trim();
+                            }
+                        }
+                        else if (reader.Name == "file" && reader["type"] == "doukutsu")
+                        {
+                            if (reader.Read())
+                            {
+                                doukutsufile = reader.Value.Trim();
+                                filestoupdate.Add(reader.Value.Trim());
+                            }
+                        }
+                        else if (reader.Name == "file" && reader["type"] == "update")
+                        {
+                            if (reader.Read())
+                            {
+                                filestoupdate.Add(reader.Value.Trim());
+                            }
+                        }
+                        else if (reader.Name == "file" && reader["type"] == "addfile")
+                        {
+                            if (reader.Read())
+                            {
+                                filestoadd.Add(reader.Value.Trim());
+                            }
+                        }
+                    }
+                }
+            }
+            catch (XmlException e)
+            {
+                Console.WriteLine("A modfile has not been found. Please put this application in a folder that contain's a mod's .cmf file." +
+                                  "\n Press any key to close this window.");
+                Console.WriteLine(e.Message);
+                Console.WriteLine(($"Exception object Line, pos: ({ e.LineNumber},{e.LinePosition})"));
+                //Console.ReadKey();
+                Environment.Exit(0);
+            }

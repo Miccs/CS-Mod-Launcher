@@ -1,0 +1,25 @@
+NOTE: OUTDATED
+
+This file is an explanation of every value in a .cmf file.
+(if you need an explanation on JSON, visit https://www.w3schools.com/js/js_json_syntax.asp)
+Version, Links and Files are objects, FilesToUpdate and FilesToAdd are arrays that require strings and VersionNum is a floating point number. All other variables are strings.
+
+• Name: The name of your mod. Will be shown on the launcher when the mod is selected, and is also used in case zip folder detection fails.
+• Author: You! Shown on the launcher when the mod is selected.
+• Description: The description of your mod. Gets shown in the big box when the mod is selected.
+
+Version
+• VersionNum: Used to determine the version of the mod when checking for updates.
+• UpdateLog: The info on the latest update(s if you REALLY want to, but not recommended), gets shown when a new update is found.
+
+Links
+• DownloadLink: A DIRECT download link to your mod. This is where the launcher downloads the mod from when updating. It's preferable to use a link to a file you can easily update.
+  If nothing or a link to a file that isn't .zip is entered here, the update button will be dimmed when your mod is selected.
+• VersionLink: A direct link to a cmf file, that is used to determine the latest version of your mod when checking for updates. Replacable link recommended for this too.
+  If nothing or a link to a file that isn't .cmf is entered here, updating is still available, but checking for versions will not.
+
+Files
+• DoukutsuFile: The filename of the .exe of your mod. If the file cannot be found the play button is dimmed. Will be updated during an update.
+• FilesToUpdate: Array that contains files that will be updated during an update.
+• FilesToAdd: Array that contains files that will be added during updates should they not be present.
+(NOTICE: You do not need to enter the .cmf file or the data folder in these, they will be automatically included and updated in each update!)
