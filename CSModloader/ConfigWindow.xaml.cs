@@ -32,7 +32,7 @@ namespace CSModLauncher
 
         public ConfigWindow()
         {
-            path = $"{MainWindow.folder}\\config.dat"; //The default path; a config file at the same location as the exe
+            path = $"{MainWindow._currentmod.Filepath}\\config.dat"; //The default path; a config file at the same location as the exe
             /*if (args.Length > 0)
             {
                 path = args[0];
