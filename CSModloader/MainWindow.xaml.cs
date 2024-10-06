@@ -70,8 +70,8 @@ namespace CSModLauncher
 
                 Update_Config();
             }
-
             InitializeComponent();
+            Modlist.Focus();
 
             Update_ModList();
         }
@@ -394,6 +394,23 @@ namespace CSModLauncher
                     }
                 }
             }
+        }
+
+        private void GitHubLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/Miccs/CS-Mod-Launcher/");
+        }
+
+        private void CSTSFLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://forum.cavestory.org/threads/14368/");
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Cave Story Mod Launcher.\nMade with love by Mint/MintiFreshFox\n2018-2024",
+                            "CSModLoader",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

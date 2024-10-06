@@ -24,6 +24,11 @@
                     <Separator/>
                     <MenuItem Header="_Exit" Click="ExitButton_Click"/>
                 </MenuItem>
+                <MenuItem Header="About">
+                    <MenuItem Header="GitHub (opens browser)" Click="GitHubLink_Click"/>
+                    <MenuItem Header="CSTSF Thread (opens browser)" Click="CSTSFLink_Click"/>
+                    <MenuItem Header="About..." Click="About_Click"/>
+                </MenuItem>
             </Menu>
             <Grid DockPanel.Dock="Bottom">
                 <Grid.ColumnDefinitions>
