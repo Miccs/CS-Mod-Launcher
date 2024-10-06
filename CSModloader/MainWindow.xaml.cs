@@ -230,15 +230,6 @@ namespace CSModLauncher
             _currentmodID = _config.Mods.First(m => m.Path == (string)item.ToolTip).ID;
 
 
-            ModTitle.Text = _currentmod.Name;
-            ModInfo.Text = _currentmod.Description;
-            AuthorBox.Text = $"Made by: {_currentmod.Author}";
-            PlayButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentmod.Files.DoukutsuFile);
-            ConfigButton.IsEnabled = true;
-            EditButton.IsEnabled = true;
-
-            PlayButton.IsEnabled = File.Exists(Path.Combine((string)item.ToolTip, _currentmod.Files.DoukutsuFile));
-
             if (_currentmod.Name == "{ERROR:NULL}")
             {
                 ModInfo.Text = "Something has gone wrong while reading the ModInfo.json file, is it's syntax correct or the file missing?";
@@ -248,6 +239,18 @@ namespace CSModLauncher
                 PlayButton.IsEnabled = false;
                 ConfigButton.IsEnabled = false;
                 EditButton.IsEnabled = false;
+            }
+
+            else
+            {
+                ModTitle.Text = _currentmod.Name;
+                ModInfo.Text = _currentmod.Description;
+                AuthorBox.Text = $"Made by: {_currentmod.Author}";
+                PlayButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentmod.Files.DoukutsuFile);
+                ConfigButton.IsEnabled = true;
+                EditButton.IsEnabled = true;
+
+                PlayButton.IsEnabled = File.Exists(Path.Combine((string)item.ToolTip, _currentmod.Files.DoukutsuFile));
             }
         }
 
@@ -281,8 +284,7 @@ namespace CSModLauncher
 
         private void Play()
         {
-            var path = Path.Combine(_config.Mods.First(m => m.ID == _currentmodID).Path,
-                                      _currentmod.Files.DoukutsuFile);
+            var path = _config.Get_Mod_Path_By_ID(_currentmodID, _currentmod.Files.DoukutsuFile);
             if (!File.Exists(path)) return;
             Process.Start(path);
         }
@@ -293,17 +295,16 @@ namespace CSModLauncher
 
             if (!string.IsNullOrWhiteSpace(_currentmod.Files.ConfigFile))
             {
-                var path = Path.Combine(_config.Mods.First(m => m.ID == _currentmodID).Path,
-                                          _currentmod.Files.ConfigFile);
-                if (!File.Exists(path)) return;
-                Process.Start(path);
+                var path = _config.Get_Mod_Path_By_ID(_currentmodID, _currentmod.Files.ConfigFile);
+                if (File.Exists(path))
+                {
+                    Process.Start(path);
+                    return;
+                }
             }
-            else
-            {
-                ConfigWindow fd = new ConfigWindow();
-                fd.path = _config.Mods.First(m => m.ID == _currentmodID).Path;
-                fd.ShowDialog();
-            }
+            var configPath = Path.Combine(_config.Get_Mod_Path_By_ID(_currentmodID), "config.dat");
+            ConfigWindow fd = new ConfigWindow(configPath);
+            fd.ShowDialog();
             //string configlocation = $"{folder}\\doconfig.exe";
             //Process.Start(configlocation);*/
         }
