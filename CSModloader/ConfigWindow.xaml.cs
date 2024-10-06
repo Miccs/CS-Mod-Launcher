@@ -30,9 +30,9 @@ namespace CSModLauncher
 
 
 
-        public ConfigWindow()
+        public ConfigWindow(string path = "config.dat")
         {
-            path = $"{MainWindow.folder}\\config.dat"; //The default path; a config file at the same location as the exe
+            //path = $"{MainWindow._currentmod.Filepath}\\config.dat"; //The default path; a config file at the same location as the exe
             /*if (args.Length > 0)
             {
                 path = args[0];
@@ -42,7 +42,11 @@ namespace CSModLauncher
             InitializeComponent();
             try
             {
-                config = File.ReadAllLines(path)[0];
+                if (File.Exists(path))
+                {
+                    config = File.ReadAllLines(path)[0];
+                }
+                else { SetDefault(); }
             }
             catch (FileNotFoundException)
             {
@@ -76,7 +80,7 @@ namespace CSModLauncher
         private void FontSetting_Click(object sender, RoutedEventArgs e)
         {
             //FontDialog fd = new FontDialog(); //used default fontdialog before this, had formatting and size settings which is obviously not needed here.
-            CSModLauncher.FontDialog fd = new CSModLauncher.FontDialog(); //At least i can change what's on this one and make it more userfriendly.
+            FontDialog fd = new FontDialog(); //At least i can change what's on this one and make it more userfriendly.
             if (fd.ShowDialog() == true)
             {
                 font = fd.FontBox.Text; //We take the fontname from the textbox, that's why changing the combobox also sets the textbox.

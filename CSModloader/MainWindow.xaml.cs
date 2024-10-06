@@ -1,400 +1,421 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Security.Policy;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Threading;
-using System.Xml;
+
+using DataFormats = System.Windows.DataFormats;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 //TODO: Clean up all the comments, move some code to their own functions and files, cry at 6 year old code
 //Also update maybe the .net version or see about options that might be friendlier to linux
 //Also maybe do more crash prevention/handling
+//Config option to automatically delete zip archives after installing the mod.
 namespace CSModLauncher
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public class Mod
-    {
-        public string Version = "";
-        public string ModName = "";
-        public string DoukutsuClubID = "";
-        public string DownloadLink = "";
-        public string VersionLink = "";
-
-        public string DoukutsuFile = "";
-        public string ConfigFile = "";
-        public List<string> FilesToUpdate = new List<string>();
-        public List<string> FilesToAdd = new List<string>();
-        public string Folder = "";
-
-        //TODO: i'm sure this could be better
-        public Mod(string version, string modName, string doukutsuClubId, string downloadLink, string versionLink, string doukutsuFile, string configFile, List<string> filesU, List<string> filesA, string folder)
-        {
-            Version = version;
-            ModName = modName;
-            DoukutsuClubID = doukutsuClubId;
-            DownloadLink = downloadLink;
-            VersionLink = versionLink;
-            DoukutsuFile = doukutsuFile;
-            ConfigFile = configFile;
-            FilesToUpdate = filesU;
-            FilesToAdd = filesA;
-            Folder = folder;
-        }
-    }
-
-    //TODO: maybe merge this with Mod
-    public class JSONMod
+    public class NamePath
     {
         public string Name { get; set; }
-        public string Author { get; set; }
-        public string Description { get; set; }
-        public JSONModVersion Version { get; set; }
-        public JSONModLinks Links { get; set; }
-        public JSONModFiles Files { get; set; }
+        public string Path { get; set; }
     }
-    public class JSONModVersion
+
+    public class ModListInfo
     {
-        public string VersionNum { get; set; }
-        public string UpdateLog { get; set; }
-    }
-    public class JSONModLinks
-    {
-        public string DoukutsuClubID { get; set; }
-        public string DownloadLink { get; set; }
-        public string VersionLink { get; set; }
-    }
-    public class JSONModFiles
-    {
-        public string DoukutsuFile { get; set; }
-        public string ConfigFile { get; set; }
-        public string[] FilesToUpdate { get; set; }
-        public string[] FilesToAdd { get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
+        public int ID { get; set; }
     }
 
     public partial class MainWindow : Window
     {
         //TODO: just store this in a current mod object or something
-        public static string version = "";
+        public static JSONMod _currentmod;
+        public static int _currentmodID;
+        public static List<ModListInfo> modlist = new List<ModListInfo>();
 
-        public static string modName = "";
-        public static string modAuthor = "";
-        public static string modDesc = "";
-        public static string doukutsuClubID = "";
-        public static string downloadLink = "";
-        public static string versionLink = "";
-
-        public static string doukutsuFile = "";
-        public static string configFile = "";
-        public static List<string> filestoupdate = new List<string>();
-        public static List<string> filestoadd = new List<string>();
-        public static string folder = "";
-
+        public static Config _config = new Config();
 
         public static uint waffles = 0;
         public static bool waffleshown = false;
 
         public MainWindow()
         {
-            //TODO: Search for JSON files instead (since that's what they are) and check their contents instead to validate if it's a modinfo file
-            //Also something is going wrong where the current folder is getting loaded as well
-            //ALSO just allow user to define their mods folder!!!!!!!!!!!
-            var foundFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.cmf", SearchOption.AllDirectories);
-
-
             InitializeComponent();
-            foreach (var file in foundFiles)
+            if (File.Exists("config.json"))
             {
-                string modname = new DirectoryInfo(file).Parent.Name; //TODO: Dont use the folder name oh god
-
-                //foundmods.Add(System.IO.Path.GetDirectoryName(file)); 
-                ListBoxItem item = new ListBoxItem();
-                item.Content = modname;//System.IO.Path.GetDirectoryName(file);
-                folder = modname;
-                Modlist.Items.Add(item);
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                string configJSON = File.ReadAllText("config.json");
+                _config = serializer.Deserialize<Config>(configJSON);
             }
+            else
+            {
+                //uh oh we got a new person here!
+                MessageBoxResult result = MessageBox.Show("Would you like to set a default mods folder? This will allow drag&drop functionality.",
+                                                          "Welcome!",
+                                                          MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    Select_folder();
+                }
+
+                Update_Config();
+            }
+            Modlist.Focus();
+
+            Update_ModList();
+        }
+
+        private void Select_folder()
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select a default folder...";
+                folderDialog.ShowNewFolderButton = true;
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    _config.ModsFolder = folderDialog.SelectedPath;
+
+                    DetectMods(folderDialog.SelectedPath);
+                }
+            }
+        }
+
+        private void Update_Config()
+        {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            File.WriteAllText("config.json", serializer.Serialize(_config));
+        }
+
+        private int Get_New_ID()
+        {
+            return (_config.Mods.Count > 0 ? _config.Mods.OrderByDescending(m => m.ID).FirstOrDefault().ID + 1 : 0);
+        }
+
+        private void Update_ModList()
+        {
+            Modlist.Items.Clear();
+            foreach (var mod in _config.Mods)
+            {
+                Modlist.Items.Add(new ListBoxItem() { Content = mod.Name, ToolTip = mod.Path });
+            }
+        }
+
+        private void Add_Mod(ModListInfo mod)
+        {
+            if (!_config.Mods.Contains(mod))
+            {
+                _config.Mods.Add(mod);
+
+                Update_Config();
+            }
+        }
+
+        private void Add_Mod(JSONMod mod, string path)
+        {
+            if (!_config.Mods.Any(m => m.Path == path))
+            {
+                _config.Mods.Add(new ModListInfo() { Name = mod.Name, Path = path, ID = Get_New_ID() });
+
+                Update_Config();
+            }
+        }
+
+        private void Write_ModInfo(JSONMod mod, string path)
+        {
+            var serializer = new JavaScriptSerializer();
+            var modJSON = serializer.Serialize(mod);
+            File.WriteAllText(path + "\\ModInfo.json", modJSON);
+        }
+
+        private void Window_Drop(object sender, System.Windows.DragEventArgs e)
+        {
+            //Add folder support, see if the extracting can be done elsewhere as well so an open zip option can be added
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                if (string.IsNullOrWhiteSpace(_config.ModsFolder) || !Directory.Exists(_config.ModsFolder))
+                {
+                    MessageBox.Show("Default mod folder not found, you can select one in File>Set mod folder...",
+                                    "CSModLoader",
+                                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+
+                var filePath = ((string[])e.Data.GetData(DataFormats.FileDrop))[0];
+                var fileType = Path.GetExtension(filePath.ToLower());
+
+                if (fileType == ".zip")
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(filePath);
+                    var folderPath = Path.Combine(_config.ModsFolder, fileName);
+
+                    if (!Directory.Exists(folderPath)) { Directory.CreateDirectory(folderPath); }
+
+                    var archive = ZipFile.OpenRead(filePath);
+                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    {
+                        var entrypath = Path.Combine(folderPath, entry.FullName);
+
+                        if (entrypath.EndsWith("\\") || entrypath.EndsWith("/"))
+                        {
+                            if (!Directory.Exists(entrypath)) { Directory.CreateDirectory(entrypath); }
+                        }
+                        else { entry.ExtractToFile(entrypath, true); }
+                    }
+
+                    if (Directory.EnumerateFiles(folderPath).Count() < 1)
+                    {
+                        var oldSource = Directory.GetDirectories(folderPath).First();
+                        var oldSourceName = Path.Combine(_config.ModsFolder, Path.GetFileName(oldSource));
+                        var oldDirectory = folderPath;
+                        var oldDirectoryName = Path.GetFileName(oldDirectory);
+                        folderPath = oldSource.Replace(oldDirectoryName + "\\", "");
+
+                        Directory.Move(oldSource, oldSourceName);
+                        Directory.Delete(oldDirectory);
+                    }
+
+                    Create_Mod(Path.GetFileName(folderPath), folderPath);
+                }
+            }
+        }
+
+        private void Create_Mod(string file, string path)
+        {
+            var gameFileDialog = new OpenFileDialog()
+            {
+                Filter = "Game executable (.exe)|*.exe",
+                InitialDirectory = path,
+                Title = "Select the game executable",
+            };
+
+            var result = gameFileDialog.ShowDialog();
+            var doukutsuPath = "";
+            if (result == true) 
+            {
+                doukutsuPath = gameFileDialog.FileName;
+                if (doukutsuPath.Contains(path)) { doukutsuPath = doukutsuPath.Replace(path + "\\", ""); }
+                else { doukutsuPath = ""; }
+            }
+
+            var mod = new JSONMod()
+            {
+                Name = file,
+                Files = new JSONModFiles() { DoukutsuFile = result == true ? doukutsuPath : "" },
+
+            };
+
+            if (!File.Exists(path + "\\ModInfo.json"))
+            {
+                Write_ModInfo(mod, path);
+            }
+            else
+            {
+                mod = GetInfo(path + "\\ModInfo.json");
+
+            }
+
+            Add_Mod(new ModListInfo() { Name = mod.Name, Path = path, ID = Get_New_ID() });
+            Update_ModList();
         }
 
         private void Modlist_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            ListBoxItem folder1 = (ListBoxItem)Modlist.SelectedItem;
-            folder = folder1.Content.ToString();
-            GetInfo(Directory.GetFiles(folder, "*.cmf")[0]);
+            if (Modlist.SelectedItem is null) return;
+            ListBoxItem item = (ListBoxItem)Modlist.SelectedItem;
+            var path = Path.Combine((string)item.ToolTip, "ModInfo.json");
 
-            ModTitle.Text = modName;
-            ModInfo.Text = modDesc;
-            VersionBox.Text = $"Version: v{version}";
-            AuthorBox.Text = $"Made by: {modAuthor}";
-            PlayButton.IsEnabled = true;
-            ConfigButton.IsEnabled = true;
-            UpdateButton.IsEnabled = true;
+            _currentmod = GetInfo(path);
+            _currentmodID = _config.Mods.First(m => m.Path == (string)item.ToolTip).ID;
 
-            if (!File.Exists($"{folder}/{doukutsuFile}"))
-            {
-                PlayButton.IsEnabled = false;
-            }
-            if (string.IsNullOrWhiteSpace(downloadLink) || downloadLink.Substring(downloadLink.Length - 3) != "zip")
-            {
-                UpdateButton.IsEnabled = false;
-            }
 
-            if (modName == "{ERROR:NULL}")
+            if (_currentmod.Name == "{ERROR:NULL}")
             {
-                ModInfo.Text = "Something has gone wrong while reading the .cmf file, is the syntax correct?";
+                ModInfo.Text = "Something has gone wrong while reading the ModInfo.json file, is it's syntax correct or the file missing?";
                 VersionBox.Text = "";
                 AuthorBox.Text = "";
                 ModTitle.Text = "CSModLauncher";
                 PlayButton.IsEnabled = false;
-                UpdateButton.IsEnabled = false;
+                ConfigButton.IsEnabled = false;
+                EditButton.IsEnabled = false;
+            }
+
+            else
+            {
+                ModTitle.Text = _currentmod.Name;
+                ModInfo.Text = _currentmod.Description;
+                AuthorBox.Text = $"Made by: {_currentmod.Author}";
+                PlayButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentmod.Files.DoukutsuFile);
+                ConfigButton.IsEnabled = true;
+                EditButton.IsEnabled = true;
+
+                PlayButton.IsEnabled = File.Exists(Path.Combine((string)item.ToolTip, _currentmod.Files.DoukutsuFile));
             }
         }
 
 
-        private void GetInfo(string filepath)
+        private JSONMod GetInfo(string filepath)
         {
-            //I have absolutely no shame in what I'm doing here -- (what was i ashamed of?)
             try
             {
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
                 string cmf = File.ReadAllText(filepath);
-                JSONMod jsonmod = serializer.Deserialize<JSONMod>(cmf);
-
-                modName = jsonmod.Name;
-                modAuthor = jsonmod.Author;
-                modDesc = jsonmod.Description;
-                version = jsonmod.Version.VersionNum;
-                doukutsuClubID = jsonmod.Links.DoukutsuClubID;
-                downloadLink = jsonmod.Links.DownloadLink;
-                versionLink = jsonmod.Links.VersionLink;
-                doukutsuFile = jsonmod.Files.DoukutsuFile;
-                configFile = jsonmod.Files.ConfigFile;
-                filestoadd = jsonmod.Files.FilesToAdd.ToList();
-                filestoupdate = jsonmod.Files.FilesToUpdate.ToList();
+                return serializer.Deserialize<JSONMod>(cmf);
             }
             catch
             {
-                modName = "{ERROR:NULL}";
+                return new JSONMod() { Name = "{ERROR:NULL}" };
             }
         }
 
-        //whats going on here wtf
+        //???
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
             Thread PlayThread = new Thread(new ThreadStart(Play));
             PlayThread.Start();
-            Thread ExitThread = new Thread(new ThreadStart(Exit));
+        }
+
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
             Close();
         }
 
 
         private void Play()
         {
-            Process.Start($"{folder}\\{doukutsuFile}");
-        }
-
-        private void Exit()
-        {
-            Thread.Sleep(100); //why is this here
-            Close();
+            var path = _config.Get_Mod_Path_By_ID(_currentmodID, _currentmod.Files.DoukutsuFile);
+            if (!File.Exists(path)) return;
+            Process.Start(path);
         }
 
 
         private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrWhiteSpace(configFile))
+
+            if (!string.IsNullOrWhiteSpace(_currentmod.Files.ConfigFile))
             {
-                Process.Start($"{folder}\\{configFile}");
+                var path = _config.Get_Mod_Path_By_ID(_currentmodID, _currentmod.Files.ConfigFile);
+                if (File.Exists(path))
+                {
+                    Process.Start(path);
+                    return;
+                }
             }
-            else
-            {
-                ConfigWindow fd = new ConfigWindow();
-                fd.ShowDialog();
-            }
+            var configPath = Path.Combine(_config.Get_Mod_Path_By_ID(_currentmodID), "config.dat");
+            ConfigWindow fd = new ConfigWindow(configPath);
+            fd.ShowDialog();
             //string configlocation = $"{folder}\\doconfig.exe";
-            //Process.Start(configlocation);
+            //Process.Start(configlocation);*/
         }
 
 
-
-        private void CreateNewCmf_Click(object sender, RoutedEventArgs e)
+        private void AddMod_Click(object sender, RoutedEventArgs e)
         {
-            AddCMFWindow ncmfw = new AddCMFWindow();
-            ncmfw.ShowDialog();
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select mod's root folder...";
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var modInfo = Directory.GetFiles(folderDialog.SelectedPath, "*ModInfo.json", SearchOption.TopDirectoryOnly);
+                    if (modInfo.Length > 0)
+                    {
+                        Add_Mod(GetInfo(modInfo[0]), folderDialog.SelectedPath);
+                    }
+
+                    else
+                    {
+                        var folderName = new DirectoryInfo(folderDialog.SelectedPath).Name;
+                        Create_Mod(folderName, folderDialog.SelectedPath);
+                    }
+
+                    Update_ModList();
+                }
+            }
         }
 
+
+        private void EditButton_Click(object sender, RoutedEventArgs e)
+        {
+            EditModDialog emd = new EditModDialog();
+            emd.Field_ModName.Text = _currentmod.Name;
+            emd.Field_Author.Text = _currentmod.Author;
+            emd.Field_Description.Text = _currentmod.Description;
+            emd.Field_DoukutsuFile.Text = _currentmod.Files.DoukutsuFile;
+            emd.Field_ConfigFile.Text = _currentmod.Files.ConfigFile;
+
+            if (emd.ShowDialog() == true)
+            {
+                _currentmod.Name = emd.Field_ModName.Text;
+                _currentmod.Author = emd.Field_Author.Text;
+                _currentmod.Description = emd.Field_Description.Text;
+                _currentmod.Files.DoukutsuFile = emd.Field_DoukutsuFile.Text;
+                _currentmod.Files.ConfigFile = emd.Field_ConfigFile.Text;
+
+                var modInfo = _config.Mods.First(m => m.ID == _currentmodID);
+                modInfo.Name = _currentmod.Name;
+                Write_ModInfo(_currentmod, modInfo.Path);
+                Update_Config();
+                Update_ModList();
+                Modlist_SelectionChanged(null, null);
+            }
+        }
 
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            //alternatiive to autoupdate, could just turn into a doukutsu club link opener if I scrap the update feature.
-            if (!string.IsNullOrWhiteSpace(doukutsuClubID))
+            //TODO: Select zip file, extract to mod folder. Helpful when downloads have a duplicate name suffix (ie 'name (2)') or add the version number to the file.
+        }
+
+        private void SelectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            Select_folder();
+            Update_Config();
+        }
+
+        private void Detect_Click(object sender, RoutedEventArgs e)
+        {
+            DetectMods(_config.ModsFolder);
+        }
+
+        private void DetectModSelect_Click(object sender, RoutedEventArgs e)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
             {
-                Process.Start($"https://doukutsuclub.knack.com/database#my-mods/mod-details/{doukutsuClubID}");
-            }
-            else
-            {
-                Title = "Updating, please wait...";
-                Thread UpdateThread = new Thread(new ThreadStart(UpdatePrompt));
-                UpdateThread.Start();
+                folderDialog.Description = "Select folder to search in...";
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    DetectMods(folderDialog.SelectedPath);
+                }
             }
         }
 
-        //TODO: Move these update functions to it's own file, maybe delete it given how bad it is lol
-        //Also move some of these to a general function to access them from the doukutsu club solution
-        private void UpdatePrompt()
+        private void DetectMods(string path)
         {
-            //TODO: EWW!!!!!!
-            Mod mod = new Mod(version, modName, doukutsuClubID, downloadLink, versionLink, doukutsuFile, configFile, filestoupdate, filestoadd, folder);
-            bool versionfound = false;
-
-            string newversion = "";
-            string newupdatelog = "";
-            if (!string.IsNullOrWhiteSpace(mod.VersionLink)) //if json doesnt exist, use xml instead for backwards compatibility
+            foreach (var file in Directory.GetFiles(path, "*ModInfo.json", SearchOption.AllDirectories))
             {
-                try
+                if (!_config.Mods.Any(m => m.Path == file))
                 {
-                    XmlReader reader = XmlReader.Create(mod.VersionLink);
-                    while (reader.Read())
-                    {
-                        if (reader.IsStartElement())
-                        {
-                            if (reader.Name == "versionno")
-                            {
-                                if (reader.Read())
-                                {
-                                    newversion = reader.Value.Trim();
-                                    versionfound = true;
-                                }
-                            }
-                            if (reader.Name == "updatelog")
-                            {
-                                if (reader.Read())
-                                {
-                                    newupdatelog = reader.Value.Trim();
-                                }
-                            }
-                        }
-                    }
-                }
-                catch
-                {
-                    versionfound = false;
+                    Add_Mod(GetInfo(file), file.ToLower().Replace("modinfo.json", ""));
                 }
             }
 
-            if (!versionfound)
-            {
-                MessageBoxResult query = MessageBox.Show($"A link to a version file has not been given, or there is something wrong with the linked file containing the version. Do you wish to update anyway? Updates may take a while.\n\nMod source: {mod.DownloadLink}", "Mod Updater", MessageBoxButton.YesNo);
-                if (query == MessageBoxResult.Yes)
-                {
-                    UpdateMod(mod);
-                }
-            }
-
-            else
-            {
-                if (Convert.ToDouble(mod.Version) < Convert.ToDouble(newversion))
-                {
-                    MessageBoxResult query = MessageBox.Show($"A new version has been found: v{newversion}. The current version is v{mod.Version}.\nDo you wish to update? Updates may take a while.\n\nUpdate log: {newupdatelog}\nMod source: {mod.DownloadLink}", "Mod Updater", MessageBoxButton.YesNo);
-                    if (query == MessageBoxResult.Yes)
-                    {
-                        UpdateMod(mod);
-                    }
-                }
-
-                else
-                {
-                    MessageBox.Show("No new version found.", "Mod Updater");
-                }
-            }
-
-            Dispatcher.Invoke(DispatcherPriority.Normal, new Action(() =>
-            {
-                Title = "CSModLauncher";
-                Modlist.SelectedIndex = 0;
-            }));
-        }
-
-        public static void UpdateMod(Mod mod)
-        {
-            //TODO: Does this actually check if a mod's files are in a folder in a zip rather than just ifles in a zip??
-            try
-            {
-                using (var client = new WebClient())
-                {
-                    client.DownloadFile(mod.DownloadLink, $"{mod.Folder}/dl.temp.zip");
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Mod download failed.", "Error!");
-                return;
-            }
-            Console.WriteLine("Extracting zip file...");
-
-            ZipArchive zip = ZipFile.OpenRead($"{mod.Folder}/dl.temp.zip");
-            IReadOnlyCollection<ZipArchiveEntry> entries = zip.Entries;
-            string entry = entries.ToArray()[0].FullName.Replace("/", "");
-            zip.Dispose();
-            ZipFile.ExtractToDirectory($"{mod.Folder}/dl.temp.zip", mod.Folder);
-
-            string newmodfolder = mod.ModName;
-            if (Directory.Exists(entry))
-            {
-                newmodfolder = entry;
-            }
-
-            Console.WriteLine("Backing up old data...");
-            Directory.CreateDirectory($"{mod.Folder}/old_backup");
-            try { CopyDirectory($"{mod.Folder}/data", $"{mod.Folder}/old_backup/data"); }
-            catch { Console.WriteLine("data folder not found."); }
-            foreach (string file in mod.FilesToUpdate)
-            {
-                try { File.Copy(file, $"{mod.Folder}/old_backup/{file}"); }
-                catch { Console.WriteLine($"\"{file}\" not found."); }
-            }
-
-            Console.WriteLine("Updating...");
-            try { Directory.Delete($"{mod.Folder}/data", true); }
-            catch { }
-            foreach (string file in mod.FilesToUpdate)
-            {
-                try { File.Delete(file); }
-                catch { }
-            }
-
-            try { CopyDirectory($"{mod.Folder}/{newmodfolder}/data", $"{mod.Folder}/data"); }
-            catch { }
-            foreach (string file in mod.FilesToUpdate)
-            {
-                try { File.Copy($"{mod.Folder}/{newmodfolder}/{file}", $"{mod.Folder}/{file}"); }
-                catch { Console.WriteLine($"{file} has not been found, skipping..."); }
-            }
-            foreach (string file in mod.FilesToAdd)
-            {
-                if (!File.Exists($"{mod.Folder}/{file}")) { Console.WriteLine($"{file} not detected, adding..."); File.Copy($"{mod.Folder}/{newmodfolder}/{file}", $"{mod.Folder}/{file}"); }
-            }
-
-            File.Delete($"{mod.Folder}/{newmodfolder}.cmf");
-            try { File.Copy(Directory.GetFiles($"{mod.Folder}/{newmodfolder}", "*.cmf")[0], $"{mod.Folder}/{newmodfolder}.cmf"); }
-            catch { }
-
-            Console.WriteLine("Cleaning up temporary files...");
-            Directory.Delete($"{mod.Folder}/{newmodfolder}", true);
-            Directory.Delete($"{mod.Folder}/old_backup", true);
-            File.Delete($"{mod.Folder}/dl.temp.zip");
-
-            MessageBox.Show("The update has been completed!", "Mod Updater");
-            return;
+            Update_ModList();
         }
 
         public static void CopyDirectory(string sourcedirectory, string destination)
@@ -440,6 +461,23 @@ namespace CSModLauncher
                     }
                 }
             }
+        }
+
+        private void GitHubLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://github.com/Miccs/CS-Mod-Launcher/");
+        }
+
+        private void CSTSFLink_Click(object sender, RoutedEventArgs e)
+        {
+            Process.Start("https://forum.cavestory.org/threads/14368/");
+        }
+
+        private void About_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Cave Story Mod Launcher.\nMade with love by Mint/MintiFreshFox\n2018-2024",
+                            "CSModLoader",
+                            MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

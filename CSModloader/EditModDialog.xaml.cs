@@ -15,19 +15,25 @@ using System.Windows.Shapes;
 namespace CSModLauncher
 {
     /// <summary>
-    /// Interaction logic for AddCMFWindow.xaml
+    /// Interaction logic for EditModDialog.xaml
     /// </summary>
-    public partial class AddCMFWindow : Window
+    public partial class EditModDialog : Window
     {
-        public AddCMFWindow()
+        public EditModDialog()
         {
             InitializeComponent();
         }
 
-        private void Window_MouseDown(object sender, MouseButtonEventArgs e)
+        public bool first = true; //used to avoid a crash when the dialog is made
+
+        private void OKButton_Click(object sender, RoutedEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
+            this.DialogResult = true;
+        }
+
+        private void Window_ContentRendered(object sender, EventArgs e)
+        {
+            Field_ModName.Focus();
         }
     }
 }
