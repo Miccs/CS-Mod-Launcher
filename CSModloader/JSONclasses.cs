@@ -9,7 +9,6 @@ namespace CSModLauncher
     public class JSONMod
     {
         public string Name { get; set; }
-        public string Filepath { get; set; }
         public string Author { get; set; }
         public string Description { get; set; }
         public List<NamePath> Links { get; set; } = new List<NamePath>();

@@ -31,17 +31,18 @@ namespace CSModLauncher
         public string Path { get; set; }
     }
 
-    //either find an use for this or merge with NamePath
     public class ModListInfo
     {
         public string Name { get; set; }
         public string Path { get; set; }
+        public int ID { get; set; }
     }
 
     public partial class MainWindow : Window
     {
         //TODO: just store this in a current mod object or something
         public static JSONMod _currentmod;
+        public static int _currentmodID;
         public static List<ModListInfo> modlist = new List<ModListInfo>();
 
         public static Config _config = new Config();
@@ -51,6 +52,7 @@ namespace CSModLauncher
 
         public MainWindow()
         {
+            InitializeComponent();
             if (File.Exists("config.json"))
             {
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
@@ -70,7 +72,6 @@ namespace CSModLauncher
 
                 Update_Config();
             }
-            InitializeComponent();
             Modlist.Focus();
 
             Update_ModList();
@@ -99,6 +100,11 @@ namespace CSModLauncher
             File.WriteAllText("config.json", serializer.Serialize(_config));
         }
 
+        private int Get_New_ID()
+        {
+            return (_config.Mods.Count > 0 ? _config.Mods.OrderByDescending(m => m.ID).FirstOrDefault().ID + 1 : 0);
+        }
+
         private void Update_ModList()
         {
             Modlist.Items.Clear();
@@ -118,29 +124,21 @@ namespace CSModLauncher
             }
         }
 
-        private void Add_Mod(JSONMod mod)
+        private void Add_Mod(JSONMod mod, string path)
         {
-            if (!_config.Mods.Any(m => m.Path == mod.Filepath))
+            if (!_config.Mods.Any(m => m.Path == path))
             {
-                _config.Mods.Add(new ModListInfo() { Name = mod.Name, Path = mod.Filepath });
+                _config.Mods.Add(new ModListInfo() { Name = mod.Name, Path = path, ID = Get_New_ID() });
 
                 Update_Config();
             }
         }
 
-        private void Update_Mod(JSONMod mod)
-        {
-            var modToUpdate = _config.Mods.First(m => m.Path == mod.Filepath);
-            modToUpdate.Name = mod.Name;
-
-            Write_ModInfo(mod);
-        }
-
-        private void Write_ModInfo(JSONMod mod)
+        private void Write_ModInfo(JSONMod mod, string path)
         {
             var serializer = new JavaScriptSerializer();
             var modJSON = serializer.Serialize(mod);
-            File.WriteAllText(mod.Filepath + "\\modInfo.json", modJSON);
+            File.WriteAllText(path + "\\ModInfo.json", modJSON);
         }
 
         private void Window_Drop(object sender, System.Windows.DragEventArgs e)
@@ -193,31 +191,43 @@ namespace CSModLauncher
             };
 
             var result = gameFileDialog.ShowDialog();
-
+            var doukutsuPath = "";
+            if (result == true) 
+            {
+                doukutsuPath = gameFileDialog.FileName;
+                if (doukutsuPath.Contains(path)) { doukutsuPath = doukutsuPath.Replace(path + "\\", ""); }
+                else { doukutsuPath = ""; }
+            }
 
             var mod = new JSONMod()
             {
                 Name = file,
-                Filepath = path,
-                Files = new JSONModFiles() { DoukutsuFile = result == true ? gameFileDialog.FileName : "" },
+                Files = new JSONModFiles() { DoukutsuFile = result == true ? doukutsuPath : "" },
 
             };
 
-            if (!File.Exists(path + "\\modInfo.json"))
+            if (!File.Exists(path + "\\ModInfo.json"))
             {
-                Write_ModInfo(mod);
+                Write_ModInfo(mod, path);
+            }
+            else
+            {
+                mod = GetInfo(path + "\\ModInfo.json");
+
             }
 
-            Add_Mod(new ModListInfo() { Name = file, Path = path });
+            Add_Mod(new ModListInfo() { Name = mod.Name, Path = path, ID = Get_New_ID() });
             Update_ModList();
         }
 
         private void Modlist_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (Modlist.SelectedItem is null) return;
             ListBoxItem item = (ListBoxItem)Modlist.SelectedItem;
-            var path = Path.Combine((string)item.ToolTip, "modInfo.json");
+            var path = Path.Combine((string)item.ToolTip, "ModInfo.json");
 
             _currentmod = GetInfo(path);
+            _currentmodID = _config.Mods.First(m => m.Path == (string)item.ToolTip).ID;
 
 
             ModTitle.Text = _currentmod.Name;
@@ -227,11 +237,11 @@ namespace CSModLauncher
             ConfigButton.IsEnabled = true;
             EditButton.IsEnabled = true;
 
-            PlayButton.IsEnabled = File.Exists(_currentmod.Files.DoukutsuFile);
+            PlayButton.IsEnabled = File.Exists(Path.Combine((string)item.ToolTip, _currentmod.Files.DoukutsuFile));
 
             if (_currentmod.Name == "{ERROR:NULL}")
             {
-                ModInfo.Text = "Something has gone wrong while reading the modInfo.json file, is it's syntax correct or the file missing?";
+                ModInfo.Text = "Something has gone wrong while reading the ModInfo.json file, is it's syntax correct or the file missing?";
                 VersionBox.Text = "";
                 AuthorBox.Text = "";
                 ModTitle.Text = "CSModLauncher";
@@ -271,7 +281,10 @@ namespace CSModLauncher
 
         private void Play()
         {
-            Process.Start(_currentmod.Files.DoukutsuFile);
+            var path = Path.Combine(_config.Mods.First(m => m.ID == _currentmodID).Path,
+                                      _currentmod.Files.DoukutsuFile);
+            if (!File.Exists(path)) return;
+            Process.Start(path);
         }
 
 
@@ -280,11 +293,15 @@ namespace CSModLauncher
 
             if (!string.IsNullOrWhiteSpace(_currentmod.Files.ConfigFile))
             {
-                Process.Start(_currentmod.Files.ConfigFile);
+                var path = Path.Combine(_config.Mods.First(m => m.ID == _currentmodID).Path,
+                                          _currentmod.Files.ConfigFile);
+                if (!File.Exists(path)) return;
+                Process.Start(path);
             }
             else
             {
                 ConfigWindow fd = new ConfigWindow();
+                fd.path = _config.Mods.First(m => m.ID == _currentmodID).Path;
                 fd.ShowDialog();
             }
             //string configlocation = $"{folder}\\doconfig.exe";
@@ -301,15 +318,15 @@ namespace CSModLauncher
 
                 if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
                 {
-                    var modInfo = Directory.GetFiles(folderDialog.SelectedPath, "*modInfo.json", SearchOption.TopDirectoryOnly);
+                    var modInfo = Directory.GetFiles(folderDialog.SelectedPath, "*ModInfo.json", SearchOption.TopDirectoryOnly);
                     if (modInfo.Length > 0)
                     {
-                        Add_Mod(GetInfo(modInfo[0]));
+                        Add_Mod(GetInfo(modInfo[0]), folderDialog.SelectedPath);
                     }
 
                     else
                     {
-                        var folderName = Path.GetFileName(Path.GetDirectoryName(folderDialog.SelectedPath));
+                        var folderName = new DirectoryInfo(folderDialog.SelectedPath).Name;
                         Create_Mod(folderName, folderDialog.SelectedPath);
                     }
 
@@ -336,8 +353,11 @@ namespace CSModLauncher
                 _currentmod.Files.DoukutsuFile = emd.Field_DoukutsuFile.Text;
                 _currentmod.Files.ConfigFile = emd.Field_ConfigFile.Text;
 
-                Update_Mod(_currentmod);
+                var modInfo = _config.Mods.First(m => m.ID == _currentmodID);
+                modInfo.Name = _currentmod.Name;
+                Write_ModInfo(_currentmod, modInfo.Path);
                 Update_Config();
+                Update_ModList();
                 Modlist_SelectionChanged(null, null);
             }
         }
@@ -374,11 +394,11 @@ namespace CSModLauncher
 
         private void DetectMods(string path)
         {
-            foreach (var file in Directory.GetFiles(path, "*modInfo.json", SearchOption.AllDirectories))
+            foreach (var file in Directory.GetFiles(path, "*ModInfo.json", SearchOption.AllDirectories))
             {
                 if (!_config.Mods.Any(m => m.Path == file))
                 {
-                    Add_Mod(GetInfo(file));
+                    Add_Mod(GetInfo(file), file.ToLower().Replace("modinfo.json", ""));
                 }
             }
 

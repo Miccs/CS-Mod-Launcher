@@ -25,14 +25,14 @@ namespace CSModLauncher
     public partial class ConfigWindow : Window
     {
         public static string config = ""; //The config file
-        public static string path; //The path to the file
+        public string path; //The path to the file
         public static string font; //The currently selected font, easier to save as an variable than to get it from the sample box's font
 
 
 
         public ConfigWindow()
         {
-            path = $"{MainWindow._currentmod.Filepath}\\config.dat"; //The default path; a config file at the same location as the exe
+            //path = $"{MainWindow._currentmod.Filepath}\\config.dat"; //The default path; a config file at the same location as the exe
             /*if (args.Length > 0)
             {
                 path = args[0];
@@ -42,7 +42,11 @@ namespace CSModLauncher
             InitializeComponent();
             try
             {
-                config = File.ReadAllLines(path)[0];
+                if (File.Exists(path))
+                {
+                    config = File.ReadAllLines(path)[0];
+                }
+                else { SetDefault(); }
             }
             catch (FileNotFoundException)
             {
