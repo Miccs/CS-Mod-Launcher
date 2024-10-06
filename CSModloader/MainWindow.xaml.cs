@@ -128,6 +128,21 @@ namespace CSModLauncher
             }
         }
 
+        private void Update_Mod(JSONMod mod)
+        {
+            var modToUpdate = _config.Mods.First(m => m.Path == mod.Filepath);
+            modToUpdate.Name = mod.Name;
+
+            Write_ModInfo(mod);
+        }
+
+        private void Write_ModInfo(JSONMod mod)
+        {
+            var serializer = new JavaScriptSerializer();
+            var modJSON = serializer.Serialize(mod);
+            File.WriteAllText(mod.Filepath + "\\modInfo.json", modJSON);
+        }
+
         private void Window_Drop(object sender, System.Windows.DragEventArgs e)
         {
             //Add folder support, see if the extracting can be done elsewhere as well so an open zip option can be added
@@ -190,9 +205,7 @@ namespace CSModLauncher
 
             if (!File.Exists(path + "\\modInfo.json"))
             {
-                var serializer = new JavaScriptSerializer();
-                var modJSON = serializer.Serialize(mod);
-                File.WriteAllText(path + "\\modInfo.json", modJSON);
+                Write_ModInfo(mod);
             }
 
             Add_Mod(new ModListInfo() { Name = file, Path = path });
@@ -212,6 +225,7 @@ namespace CSModLauncher
             AuthorBox.Text = $"Made by: {_currentmod.Author}";
             PlayButton.IsEnabled = true;
             ConfigButton.IsEnabled = true;
+            EditButton.IsEnabled = true;
 
             PlayButton.IsEnabled = File.Exists(_currentmod.Files.DoukutsuFile);
 
@@ -222,7 +236,7 @@ namespace CSModLauncher
                 AuthorBox.Text = "";
                 ModTitle.Text = "CSModLauncher";
                 PlayButton.IsEnabled = false;
-                UpdateButton.IsEnabled = false;
+                EditButton.IsEnabled = false;
             }
         }
 
@@ -306,8 +320,27 @@ namespace CSModLauncher
 
         private void EditButton_Click(object sender, RoutedEventArgs e)
         {
-            //TODO: Window where you can edit the properties of a modinfo json file
+            EditModDialog emd = new EditModDialog();
+            emd.Field_ModName.Text = _currentmod.Name;
+            emd.Field_Author.Text = _currentmod.Author;
+            emd.Field_Description.Text = _currentmod.Description;
+            emd.Field_DoukutsuFile.Text = _currentmod.Files.DoukutsuFile;
+            emd.Field_ConfigFile.Text = _currentmod.Files.ConfigFile;
+
+            if (emd.ShowDialog() == true)
+            {
+                _currentmod.Name = emd.Field_ModName.Text;
+                _currentmod.Author = emd.Field_Author.Text;
+                _currentmod.Description = emd.Field_Description.Text;
+                _currentmod.Files.DoukutsuFile = emd.Field_DoukutsuFile.Text;
+                _currentmod.Files.ConfigFile = emd.Field_ConfigFile.Text;
+
+                Update_Mod(_currentmod);
+                Update_Config();
+                Modlist_SelectionChanged(null, null);
+            }
         }
+
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
             //TODO: Select zip file, extract to mod folder. Helpful when downloads have a duplicate name suffix (ie 'name (2)') or add the version number to the file.

@@ -47,7 +47,7 @@
                     <Grid Margin="10,0,10,310" Height="40" VerticalAlignment="Bottom">
                         <Button x:Name="PlayButton" IsEnabled="False" Content="Play!" FontSize="20" Margin="0,0,301,0" Click="PlayButton_Click" Height="40" VerticalAlignment="Top"/>
                         <Button x:Name="ConfigButton" IsEnabled="False" Content="Configure" FontSize="20" Margin="107,0,195,0" Click="ConfigButton_Click" Height="40" VerticalAlignment="Top"/>
-                        <Button x:Name="UpdateButton" IsEnabled="False" FontSize="20" Content="Edit..." Margin="213,0,0,0" Click="EditButton_Click" Height="40" VerticalAlignment="Top"/>
+                        <Button x:Name="EditButton" IsEnabled="False" FontSize="20" Content="Edit..." Margin="213,0,0,0" Click="EditButton_Click" Height="40" VerticalAlignment="Top"/>
                     </Grid>
                     <Border Margin="10,157,10,10" Background="#FFE6E6E6" BorderBrush="#FFABADB3" BorderThickness="1">
                         <TextBlock x:Name="ModInfo" TextWrapping="Wrap" Text="Please select a mod" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto" Foreground="Black" Margin="2,2,2,2"/>

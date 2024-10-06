@@ -76,7 +76,7 @@ namespace CSModLauncher
         private void FontSetting_Click(object sender, RoutedEventArgs e)
         {
             //FontDialog fd = new FontDialog(); //used default fontdialog before this, had formatting and size settings which is obviously not needed here.
-            CSModLauncher.FontDialog fd = new CSModLauncher.FontDialog(); //At least i can change what's on this one and make it more userfriendly.
+            FontDialog fd = new FontDialog(); //At least i can change what's on this one and make it more userfriendly.
             if (fd.ShowDialog() == true)
             {
                 font = fd.FontBox.Text; //We take the fontname from the textbox, that's why changing the combobox also sets the textbox.
