@@ -146,9 +146,9 @@ namespace CSModLauncher
             //Add folder support, see if the extracting can be done elsewhere as well so an open zip option can be added
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                if (string.IsNullOrWhiteSpace(_config.ModsFolder))
+                if (string.IsNullOrWhiteSpace(_config.ModsFolder) || !Directory.Exists(_config.ModsFolder))
                 {
-                    MessageBox.Show("You have not yet selected a default mod folder, you can select one in (Placeholder)",
+                    MessageBox.Show("Default mod folder not found, you can select one in File>Set mod folder...",
                                     "CSModLoader",
                                     MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
@@ -176,7 +176,19 @@ namespace CSModLauncher
                         else { entry.ExtractToFile(entrypath, true); }
                     }
 
-                    Create_Mod(filePath, folderPath);
+                    if (Directory.EnumerateFiles(folderPath).Count() < 1)
+                    {
+                        var oldSource = Directory.GetDirectories(folderPath).First();
+                        var oldSourceName = Path.Combine(_config.ModsFolder, Path.GetFileName(oldSource));
+                        var oldDirectory = folderPath;
+                        var oldDirectoryName = Path.GetFileName(oldDirectory);
+                        folderPath = oldSource.Replace(oldDirectoryName + "\\", "");
+
+                        Directory.Move(oldSource, oldSourceName);
+                        Directory.Delete(oldDirectory);
+                    }
+
+                    Create_Mod(Path.GetFileName(folderPath), folderPath);
                 }
             }
         }
