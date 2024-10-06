@@ -223,7 +223,7 @@ namespace CSModLauncher
             ModTitle.Text = _currentmod.Name;
             ModInfo.Text = _currentmod.Description;
             AuthorBox.Text = $"Made by: {_currentmod.Author}";
-            PlayButton.IsEnabled = true;
+            PlayButton.IsEnabled = !string.IsNullOrWhiteSpace(_currentmod.Files.DoukutsuFile);
             ConfigButton.IsEnabled = true;
             EditButton.IsEnabled = true;
 
@@ -236,6 +236,7 @@ namespace CSModLauncher
                 AuthorBox.Text = "";
                 ModTitle.Text = "CSModLauncher";
                 PlayButton.IsEnabled = false;
+                ConfigButton.IsEnabled = false;
                 EditButton.IsEnabled = false;
             }
         }
