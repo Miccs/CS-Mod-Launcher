@@ -1,29 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Security.Policy;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Threading;
-using System.Xml;
 
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using DataFormats = System.Windows.DataFormats;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MessageBox = System.Windows.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 //TODO: Clean up all the comments, move some code to their own functions and files, cry at 6 year old code
 //Also update maybe the .net version or see about options that might be friendlier to linux
 //Also maybe do more crash prevention/handling
+//Config option to automatically delete zip archives after installing the mod.
 namespace CSModLauncher
 {
     /// <summary>
@@ -38,8 +34,8 @@ namespace CSModLauncher
     //either find an use for this or merge with NamePath
     public class ModListInfo
     {
-        public string Name {  get; set; }
-        public string Path {  get; set; }
+        public string Name { get; set; }
+        public string Path { get; set; }
     }
 
     public partial class MainWindow : Window
@@ -55,11 +51,6 @@ namespace CSModLauncher
 
         public MainWindow()
         {
-            //TODO: Search for JSON files instead (since that's what they are) and check their contents instead to validate if it's a modinfo file
-            //Also something is going wrong where the current folder is getting loaded as well
-            //ALSO just allow user to define their mods folder!!!!!!!!!!!
-            var foundFiles = Directory.EnumerateFiles(Directory.GetCurrentDirectory(), "*.cmf", SearchOption.AllDirectories);
-
             if (File.Exists("config.json"))
             {
                 JavaScriptSerializer serializer = new JavaScriptSerializer();
@@ -74,21 +65,10 @@ namespace CSModLauncher
                                                           MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
-                    using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
-                    {
-                        folderDialog.Description = "Select a default folder...";
-                        folderDialog.ShowNewFolderButton = true;
-                        folderDialog.SelectedPath = Environment.CurrentDirectory;
-
-                        if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-                        {
-                            _config.ModsFolder = folderDialog.SelectedPath;
-                        }
-                    }
+                    Select_folder();
                 }
-                
-                JavaScriptSerializer serializer = new JavaScriptSerializer();
-                File.WriteAllText("config.json", serializer.Serialize(_config));
+
+                Update_Config();
             }
 
             InitializeComponent();
@@ -96,32 +76,67 @@ namespace CSModLauncher
             Update_ModList();
         }
 
+        private void Select_folder()
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select a default folder...";
+                folderDialog.ShowNewFolderButton = true;
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    _config.ModsFolder = folderDialog.SelectedPath;
+
+                    DetectMods(folderDialog.SelectedPath);
+                }
+            }
+        }
+
+        private void Update_Config()
+        {
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            File.WriteAllText("config.json", serializer.Serialize(_config));
+        }
+
         private void Update_ModList()
         {
-            foreach (var mod in _config.Mods) {
+            Modlist.Items.Clear();
+            foreach (var mod in _config.Mods)
+            {
                 Modlist.Items.Add(new ListBoxItem() { Content = mod.Name, ToolTip = mod.Path });
             }
         }
 
         private void Add_Mod(ModListInfo mod)
         {
-            _config.Mods.Add(mod);
+            if (!_config.Mods.Contains(mod))
+            {
+                _config.Mods.Add(mod);
 
-            JavaScriptSerializer serializer = new JavaScriptSerializer();
-            File.WriteAllText("config.json", serializer.Serialize(_config));
+                Update_Config();
+            }
+        }
 
-            Update_ModList();
+        private void Add_Mod(JSONMod mod)
+        {
+            if (!_config.Mods.Any(m => m.Path == mod.Filepath))
+            {
+                _config.Mods.Add(new ModListInfo() { Name = mod.Name, Path = mod.Filepath });
+
+                Update_Config();
+            }
         }
 
         private void Window_Drop(object sender, System.Windows.DragEventArgs e)
         {
-            //Add folder support, also move everything to allow for other ways to add something
+            //Add folder support, see if the extracting can be done elsewhere as well so an open zip option can be added
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 if (string.IsNullOrWhiteSpace(_config.ModsFolder))
                 {
                     MessageBox.Show("You have not yet selected a default mod folder, you can select one in (Placeholder)",
-                                    "CSModLoader", 
+                                    "CSModLoader",
                                     MessageBoxButton.OK, MessageBoxImage.Warning);
                     return;
                 }
@@ -136,7 +151,6 @@ namespace CSModLauncher
 
                     if (!Directory.Exists(folderPath)) { Directory.CreateDirectory(folderPath); }
 
-                    //ZipFile.ExtractToDirectory(filePath, folderPath);
                     var archive = ZipFile.OpenRead(filePath);
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
@@ -149,31 +163,40 @@ namespace CSModLauncher
                         else { entry.ExtractToFile(entrypath, true); }
                     }
 
-                    var gameFileDialog = new OpenFileDialog()
-                    {
-                        Filter = "Game executable (.exe)|*.exe",
-                        InitialDirectory = folderPath,
-                        Title = "Select the game executable",
-                    };
-
-                    var result = gameFileDialog.ShowDialog();
-
-
-                    var mod = new JSONMod()
-                    {
-                        Name = fileName,
-                        Filepath = folderPath,
-                        Files = new JSONModFiles() { DoukutsuFile = result == true ? gameFileDialog.FileName : "" },
-
-                    };
-
-                    var serializer = new JavaScriptSerializer();
-                    var modJSON = serializer.Serialize(mod);
-                    File.WriteAllText(folderPath + "\\modInfo.json", modJSON);
-
-                    Add_Mod(new ModListInfo() { Name = fileName, Path = folderPath });
+                    Create_Mod(filePath, folderPath);
                 }
             }
+        }
+
+        private void Create_Mod(string file, string path)
+        {
+            var gameFileDialog = new OpenFileDialog()
+            {
+                Filter = "Game executable (.exe)|*.exe",
+                InitialDirectory = path,
+                Title = "Select the game executable",
+            };
+
+            var result = gameFileDialog.ShowDialog();
+
+
+            var mod = new JSONMod()
+            {
+                Name = file,
+                Filepath = path,
+                Files = new JSONModFiles() { DoukutsuFile = result == true ? gameFileDialog.FileName : "" },
+
+            };
+
+            if (!File.Exists(path + "\\modInfo.json"))
+            {
+                var serializer = new JavaScriptSerializer();
+                var modJSON = serializer.Serialize(mod);
+                File.WriteAllText(path + "\\modInfo.json", modJSON);
+            }
+
+            Add_Mod(new ModListInfo() { Name = file, Path = path });
+            Update_ModList();
         }
 
         private void Modlist_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -225,22 +248,21 @@ namespace CSModLauncher
             PlayThread.Start();
         }
 
+        private void ExitButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
 
         private void Play()
         {
             Process.Start(_currentmod.Files.DoukutsuFile);
         }
 
-        private void Exit()
-        {
-            Thread ExitThread = new Thread(new ThreadStart(Exit));
-            Close();
-        }
-
 
         private void ConfigButton_Click(object sender, RoutedEventArgs e)
         {
-            
+
             if (!string.IsNullOrWhiteSpace(_currentmod.Files.ConfigFile))
             {
                 Process.Start(_currentmod.Files.ConfigFile);
@@ -255,23 +277,79 @@ namespace CSModLauncher
         }
 
 
-        //Just turn this into an open folder dialogue to add existing folders
-        private void CreateNewCmf_Click(object sender, RoutedEventArgs e)
+        private void AddMod_Click(object sender, RoutedEventArgs e)
         {
-            AddCMFWindow ncmfw = new AddCMFWindow();
-            ncmfw.ShowDialog();
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select mod's root folder...";
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var modInfo = Directory.GetFiles(folderDialog.SelectedPath, "*modInfo.json", SearchOption.TopDirectoryOnly);
+                    if (modInfo.Length > 0)
+                    {
+                        Add_Mod(GetInfo(modInfo[0]));
+                    }
+
+                    else
+                    {
+                        var folderName = Path.GetFileName(Path.GetDirectoryName(folderDialog.SelectedPath));
+                        Create_Mod(folderName, folderDialog.SelectedPath);
+                    }
+
+                    Update_ModList();
+                }
+            }
         }
 
 
+        private void EditButton_Click(object sender, RoutedEventArgs e)
+        {
+            //TODO: Window where you can edit the properties of a modinfo json file
+        }
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            //alternatiive to autoupdate, could just turn into a doukutsu club link opener if I scrap the update feature.
-            //if (!string.IsNullOrWhiteSpace(doukutsuClubID))
-            //{
-                //Process.Start($"https://doukutsuclub.knack.com/database#my-mods/mod-details/{doukutsuClubID}");
-            //}
+            //TODO: Select zip file, extract to mod folder. Helpful when downloads have a duplicate name suffix (ie 'name (2)') or add the version number to the file.
         }
 
+        private void SelectFolder_Click(object sender, RoutedEventArgs e)
+        {
+            Select_folder();
+            Update_Config();
+        }
+
+        private void Detect_Click(object sender, RoutedEventArgs e)
+        {
+            DetectMods(_config.ModsFolder);
+        }
+
+        private void DetectModSelect_Click(object sender, RoutedEventArgs e)
+        {
+            using (FolderBrowserDialog folderDialog = new FolderBrowserDialog())
+            {
+                folderDialog.Description = "Select folder to search in...";
+                folderDialog.SelectedPath = Environment.CurrentDirectory;
+
+                if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    DetectMods(folderDialog.SelectedPath);
+                }
+            }
+        }
+
+        private void DetectMods(string path)
+        {
+            foreach (var file in Directory.GetFiles(path, "*modInfo.json", SearchOption.AllDirectories))
+            {
+                if (!_config.Mods.Any(m => m.Path == file))
+                {
+                    Add_Mod(GetInfo(file));
+                }
+            }
+
+            Update_ModList();
+        }
 
         public static void CopyDirectory(string sourcedirectory, string destination)
         {
