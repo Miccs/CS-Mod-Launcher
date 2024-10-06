@@ -7,4 +7,10 @@ Made when I barely had an idea of programming properly.
 For use however people want so long as it's not used maliciously.
 
 ## How to use
-Put the executable in the root folder of wherever you save your mods.
+Unzip the executable wherever you like.
+When launching the program for the first time, you will be asked to set a mod folder which you can use as default folder for scanning mods or auto-installing mods.
+This folder can be configured with the 'Set mod folder...' under the 'File' tab.
+
+Through the detect options under the 'File' tab you can automatically fill the modlist with mods that have a ModInfo.json file in their folder.
+You can also automatically install downloaded mods by dragging the zip file to the program window, and mods in existing folders can be added through 'File>Add new mod...'.
+Both these options generate ModInfo.json files, which you can edit by selecting them on the list and pressing 'Edit', after which you can choose to include them in your mod.
